@@ -1,18 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Student } from './students.entity';
 import { Repository } from 'typeorm';
+import { Student } from './student.entity';
 
 @Injectable()
-export class StudentsService {
+export class StudentService {
     constructor(
         @InjectRepository(Student)
-        private readonly StudentRepository: Repository<Student>,
+        private readonly studentRepository: Repository<Student>,
     ) {}
 
-    async createStudent(data: Partial<Student>): Promise<Student> {
-        const student = this.StudentRepository.create(data);
-        return this.StudentRepository.save(student);
+    // create
+    async createStudent(date: Partial<Student>): Promise<Student> {
+        const student = this.studentRepository.create(date);
+        return this.studentRepository.save(student);
+    }
 
+    // read
+    async getStudents(): Promise<Student[]> {
+        return this.studentRepository.find();
+    }
+
+    async getStudentById(id: number): Promise<Student> {
+        const student = await this.studentRepository.findOneBy({ id });
+        if (!student) {
+          throw new NotFoundException(`Student with ID ${id} not found`);
+        }
+        return student;
+      }
+    
+    // update
+    async updateStudent(id: number, data: Partial<Student>): Promise<Student> {
+        const student = await this.getStudentById(id);
+        Object.assign(student, data);
+        return this.studentRepository.save(student);
     }
 }
